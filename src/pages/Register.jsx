@@ -412,6 +412,11 @@ function Register() {
               </button>
             </div>
           </form>
+          {signUpError && (
+            <div>
+              <p className=" font-semibold text-red-700">{signUpError}</p>
+            </div>
+          )}
           <div className="mt-4 text-sm text-gray-600 text-center">
             <p>
               Already have an account?{" "}
