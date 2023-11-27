@@ -1,8 +1,9 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { UserContext } from "../context/userProvider";
 import { useForm } from "react-hook-form";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 function Register() {
-  const { userName } = useContext(UserContext);
+  const { currentUser, setCurrentUser } = useContext(UserContext);
   const {
     register,
     handleSubmit,
@@ -11,8 +12,13 @@ function Register() {
     formState: { errors },
   } = useForm();
 
+  const [signUpError, setSignUpError] = useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = location?.state?.from?.pathname || "/dashboard";
   const userHandleSubmit = async (data) => {
     console.log(data);
+    setSignUpError(null);
 
     const res = await fetch("http://localhost:5000/api/v1/users/create-user", {
       method: "POST",
@@ -22,8 +28,19 @@ function Register() {
       body: JSON.stringify(data),
     });
     const result = await res.json();
-
     console.log({ result });
+
+    if (result.success) {
+      // user created successfully
+      setCurrentUser(result.data);
+      // console.log(result);
+      setTimeout(() => {
+        navigate(from, { replace: true });
+      }, 100);
+    } else {
+      // duplicate email or something went wrong
+      setSignUpError("duplicate email or something went wrong");
+    }
   };
   return (
     <div className="flex h-screen">
@@ -262,7 +279,7 @@ function Register() {
       <div className="w-full bg-gray-100 lg:w-1/2 flex items-center justify-center">
         <div className="max-w-md w-full p-6">
           <h1 className="text-3xl font-semibold mb-6 text-black text-center">
-            Log In
+            Register
           </h1>
 
           <form
@@ -391,16 +408,16 @@ function Register() {
                 type="submit"
                 className="w-full bg-black text-white p-2 rounded-md hover:bg-gray-800 focus:outline-none focus:bg-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-colors duration-300"
               >
-                Sign Up
+                Register
               </button>
             </div>
           </form>
           <div className="mt-4 text-sm text-gray-600 text-center">
             <p>
               Already have an account?{" "}
-              <a href="#" className="text-black hover:underline">
-                Login here
-              </a>
+              <Link to="/login" className="text-black hover:underline">
+                Sign in here
+              </Link>
             </p>
           </div>
         </div>

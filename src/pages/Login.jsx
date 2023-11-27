@@ -1,4 +1,56 @@
+import React from "react";
+import { useContext, useState } from "react";
+import { UserContext } from "../context/userProvider";
+import { useForm } from "react-hook-form";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 function Login() {
+  const { currentUser, setCurrentUser } = useContext(UserContext);
+  const {
+    register,
+    handleSubmit,
+    watch,
+
+    formState: { errors },
+  } = useForm();
+  const [signUpError, setSignUpError] = useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = location?.state?.from?.pathname || "/dashboard";
+  const userHandleSubmit = async (data) => {
+    console.log(data);
+    setSignUpError(null);
+
+    const res = await fetch("http://localhost:5000/api/v1/users/verify-user", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        user: JSON.stringify(data),
+      },
+    });
+    const result = await res.json();
+    console.log({ result });
+
+    if (result.success) {
+      setCurrentUser(result.data);
+      setTimeout(() => {
+        navigate(from, { replace: true });
+      }, 100);
+    } else {
+      //error message
+      setSignUpError(result.message);
+    }
+    // if (result.success) {
+    //   // user created successfully
+    //   setCurrentUser(result.data);
+    //   // console.log(result);
+    //   setTimeout(() => {
+    //     navigate(from, { replace: true });
+    //   }, 100);
+    // } else {
+    //   // duplicate email or something went wrong
+    //   setSignUpError("duplicate email or something went wrong");
+    // }
+  };
   return (
     <div className="flex h-screen">
       {/* <!-- Left Pane --> */}
@@ -236,68 +288,115 @@ function Login() {
       <div className="w-full bg-gray-100 lg:w-1/2 flex items-center justify-center">
         <div className="max-w-md w-full p-6">
           <h1 className="text-3xl font-semibold mb-6 text-black text-center">
-            Log In
+            Sign In
           </h1>
 
-          <form action="#" method="POST" className="space-y-4">
+          <form
+            action="#"
+            onSubmit={handleSubmit(userHandleSubmit)}
+            method="POST"
+            className="space-y-4"
+          >
             {/* <!-- Your form elements go here --> */}
+
             <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                className="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300"
-              />
+              {/* input tag and label  */}
+
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Email
+                </label>
+                <input
+                  {...register("email", {
+                    required: { value: true, message: "Email is required" },
+                    pattern: {
+                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                      message: "Invalid email address",
+                    },
+                  })}
+                  type="text"
+                  id="email"
+                  name="email"
+                  className="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300"
+                />
+              </div>
+              {/* error message  */}
+
+              {errors.email && (
+                <p className="text-red-600 font-semibold" role="alert">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
+
             <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Email
-              </label>
-              <input
-                type="text"
-                id="email"
-                name="email"
-                className="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300"
-              />
+              {/* input tag and label  */}
+
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Password
+                </label>
+                <input
+                  {...register("password", {
+                    required: { value: true, message: "Password is required" },
+                    minLength: {
+                      value: 8,
+                      message: "Password length must be 8-10 characters",
+                    },
+                    maxLength: {
+                      value: 10,
+                      message: "Password length must be 8-10 characters",
+                    },
+                    pattern: {
+                      value:
+                        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{1,}$/,
+                      message:
+                        "password must contain at least one uppercase and lowercase letter and a numeric digit and a special character",
+                    },
+                  })}
+                  type="password"
+                  id="password"
+                  name="password"
+                  className="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300"
+                />
+              </div>
+
+              {/* error message  */}
+
+              {errors.password && (
+                <p className="text-red-600 font-semibold" role="alert">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                className="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300"
-              />
-            </div>
+
+            {signUpError && (
+              <div>
+                <p className=" font-semibold text-red-700">{signUpError}</p>
+              </div>
+            )}
+
             <div>
               <button
                 type="submit"
                 className="w-full bg-black text-white p-2 rounded-md hover:bg-gray-800 focus:outline-none focus:bg-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-colors duration-300"
               >
-                Sign Up
+                Sign In
               </button>
             </div>
           </form>
           <div className="mt-4 text-sm text-gray-600 text-center">
             <p>
               Already have an account?{" "}
-              <a href="#" className="text-black hover:underline">
-                Login here
-              </a>
+              <Link to="/register" className="text-black hover:underline">
+                Register here
+              </Link>
             </p>
           </div>
         </div>
@@ -305,5 +404,4 @@ function Login() {
     </div>
   );
 }
-
 export default Login;
